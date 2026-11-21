@@ -1,0 +1,61 @@
+# Entorno de Python
+.venv/
+__pycache__/
+*.pyc
+
+# Videos y trabajos procesados (pesan mucho)
+jobs/*
+!jobs/.gitkeep
+salida/
+*.mp4
+*.mkv
+*.webm
+*.part
+
+# Modelos que se descargan solos la primera vez
+models/
+
+# Fuentes propias (pueden tener licencia)
+fonts/*
+!fonts/LEEME.txt
+
+# Claves y configuración local
+.env
+*.log
+
+# Música propia
+music/*
+!music/LEEME.txt
+
+# whisper.cpp compilado con Vulkan
+bin/
+build_whisper/
+
+# Claves guardadas desde la app
+config.json
+
+# Clave incluida del dueño y datos del servidor
+ia_incluida.json
+servidor_ia/uso.sqlite3
+
+# Copias y compilados locales
+pipeline.py.bak
+web_backup/
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+
+# graphify
+graphify-out/cache/
+graphify-out/.graphify_*
+
+# Cookies de YouTube (sesión personal: nunca subir)
+cookies.txt
+*cookies*.txt
+
+# Informe de la prueba de YouTube
+diagnostico_youtube.txt
+
+# Reglas personales del usuario (no se borran al actualizar)
+reglas/mis_reglas/*
+!reglas/mis_reglas/LEEME.txt

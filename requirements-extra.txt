@@ -1,0 +1,4 @@
+# Opcionales: NovoClip funciona sin ellos. Instalar con instalar_extras_windows.bat
+pysubs2
+stable-ts
+# deepfilternet  (opcional, requiere Rust; instalar aparte: pip install deepfilternet)
