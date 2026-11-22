@@ -313,3 +313,7 @@ Al pulsar **Optimizar con IA**: **Sonnet** ajusta el corte, el encuadre y las pa
 ### Reglas de edición editables (`reglas/`)
 
 La carpeta `reglas/` controla cómo se eligen y escriben los clips **sin IA** y qué guía recibe la IA: palabras de impacto, muletillas, relleno, risas, **glosario** (`mal -> bien`) que corrige los subtítulos sin cambiar los tiempos, **plantillas de ganchos** (hasta 3 opciones por clip, con botones para elegirlas), palabras a resaltar o no resaltar, y `guia_ia.md` (se añade a las instrucciones de Sonnet y Haiku, máx. 1.500 caracteres). Para cambiar algo, copia el archivo a `reglas/mis_reglas/` (no se borra al actualizar) y escribe solo lo tuyo; lee `reglas/LEEME.txt`.
+
+## Codex (ChatGPT) como IA
+
+Elige «Mi suscripción de ChatGPT» en Ajustes o en las opciones del video. Instala con `npm i -g @openai/codex` y entra con `codex login`. Usa `codex exec` con salida a archivo; un solo modelo para todo (sin reparto Opus/Sonnet/Haiku). Opcional: `NOVOCLIP_CODEX_MODEL` para elegir modelo. Sin comprobar en un equipo real: las imágenes (`-i`) y el nombre de modelo; si `-i` falla se repite sin imágenes.

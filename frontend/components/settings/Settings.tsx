@@ -13,8 +13,8 @@ import { PageHeader } from "../ui/PageHeader";
 import { ErrorState, Skeleton } from "../ui/States";
 import { useToast } from "../ui/Toast";
 
-export const AI_LABEL: Record<AiSource, string> = { auto: "Automática", cli: "Mi suscripción de Claude", claude_api: "API de Claude", gemini: "Gemini", incluida: "IA incluida" };
-const AI_SUB: Record<AiSource, string> = { auto: "la app elige", cli: "Claude Code", claude_api: "con clave", gemini: "con clave", incluida: "licencia de NovoClip" };
+export const AI_LABEL: Record<AiSource, string> = { auto: "Automática", cli: "Mi suscripción de Claude", claude_api: "API de Claude", gemini: "Gemini", incluida: "IA incluida", codex: "Mi suscripción de ChatGPT" };
+const AI_SUB: Record<AiSource, string> = { auto: "la app elige", cli: "Claude Code", claude_api: "con clave", gemini: "con clave", incluida: "licencia de NovoClip", codex: "Codex CLI" };
 
 const TIER: Record<string, { tone: "ok" | "warn" | "neutral"; label: string }> = {
   potente: { tone: "ok", label: "Equipo potente" },
@@ -132,6 +132,7 @@ export function Settings() {
           <span>{c.ai_sources?.[src]?.text}</span>
         </p>
 
+        {src === "codex" && <p className="text-[13px] text-ink-3">Usa Codex CLI con tu cuenta de ChatGPT (instala con «npm i -g @openai/codex» y entra con «codex login»). Un solo modelo para todo: no reparte entre Opus, Sonnet y Haiku. Para tus propios videos.</p>}
         {src === "cli" && <p className="text-[13px] text-ink-3">Usa Claude Code con la cuenta que tengas iniciada en este equipo (modelo y esfuerzo en NOVOCLIP_CLAUDE_MODEL / NOVOCLIP_CLAUDE_EFFORT). Úsalo solo para tus propios videos: tu suscripción es personal.</p>}
 
         {src === "incluida" && (

@@ -70,7 +70,7 @@ const DEFAULTS: Settings = {
   layout: "auto", jumpcuts: true, zoom: true, progressBar: true, colorPop: true, music: true, captions: true, showHook: true, highlightKw: true, loudnorm: true, useAi: false, refine: true, refineWords: false, denoise: false, outroText: "", completeIdeas: true, videoAi: false, snapSilence: true, live: false, liveEvery: 3, smartDownload: true, quality: "max", aiProvider: "auto", pick: "ia", logoOn: true,
 };
 
-const AI_NAMES: Record<AiSource, string> = { auto: "Automática", cli: "Mi suscripción de Claude", claude_api: "API de Claude", gemini: "Gemini", incluida: "IA incluida" };
+const AI_NAMES: Record<AiSource, string> = { auto: "Automática", cli: "Mi suscripción de Claude", claude_api: "API de Claude", gemini: "Gemini", incluida: "IA incluida", codex: "Mi suscripción de ChatGPT" };
 
 /** "1:23", "01:02:03" o "83" (segundos) -> segundos. null si no se entiende. */
 function parseTime(raw: string): number | null {
@@ -657,7 +657,7 @@ export function HomeFlow() {
                   onChange={(v) => setS({ ...s, aiProvider: v })}
                   options={[
                     { value: "auto" as AiSource, label: "Como en Ajustes", sub: config.data.ai_name || "sin IA" },
-                    ...(["cli", "claude_api", "gemini", "incluida"] as AiSource[])
+                    ...(["cli", "codex", "claude_api", "gemini", "incluida"] as AiSource[])
                       .filter((k) => config.data!.ai_sources![k]?.ok)
                       .map((k) => ({ value: k, label: AI_NAMES[k] })),
                   ]}

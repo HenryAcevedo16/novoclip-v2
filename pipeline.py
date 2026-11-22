@@ -1314,7 +1314,7 @@ def gemini_rank(name: str):
     tier = 1 if ("flash" in n and "lite" not in n) else 2 if "lite" in n else 4 if "carbon" in n else 3
     return (tier, 0 if "latest" in n else 1, name)
 _AI_PROVIDER = "auto"     # IA elegida para este trabajo ("auto" = la de Ajustes); ver AI_SOURCES
-AI_SOURCES = ("auto", "cli", "claude_api", "gemini", "incluida")
+AI_SOURCES = ("auto", "cli", "claude_api", "gemini", "incluida", "codex")
 
 
 def norm_provider(p) -> str:
@@ -1469,6 +1469,20 @@ def ai_source() -> str:
     return "incluida" if ai_mode() == "incluida" else "auto"
 
 
+def _codex_cli() -> Optional[str]:
+    """Ruta del comando `codex` (Codex CLI de OpenAI, con tu cuenta de ChatGPT), si está instalado."""
+    exe = os.environ.get("NOVOCLIP_CODEX_CLI") or shutil.which("codex")
+    if not exe:
+        for cand in (Path(os.environ.get("APPDATA", "")) / "npm" / "codex.cmd", Path.home() / ".local" / "bin" / "codex"):
+            if cand.is_file():
+                return str(cand)
+    return exe
+
+
+def codex_available() -> bool:
+    return os.environ.get("NOVOCLIP_NO_CLI") != "1" and bool(_codex_cli())
+
+
 def cli_available() -> bool:
     return os.environ.get("NOVOCLIP_NO_CLI") != "1" and bool(_claude_cli())
 
@@ -1485,7 +1499,9 @@ def ai_backend() -> Optional[str]:
         return "api" if anthropic_key() else None
     if src == "gemini":
         return "gemini" if gemini_key() else None
-    return claude_backend() or ("gemini" if gemini_key() else None)
+    if src == "codex":
+        return "codex" if codex_available() else None
+    return claude_backend() or ("gemini" if gemini_key() else None) or ("codex" if codex_available() else None)
 
 
 def ai_sources_status() -> dict:
@@ -1496,11 +1512,13 @@ def ai_sources_status() -> dict:
                     else "Claude Code no está instalado o no se encuentra en este equipo."},
             "claude_api": {"ok": bool(anthropic_key()), "text": "Clave de la API de Claude guardada." if anthropic_key() else "Falta la clave de la API de Claude."},
             "gemini": {"ok": bool(gemini_key()), "text": "Clave de Gemini guardada." if gemini_key() else "Falta la clave de Gemini."},
-            "incluida": {"ok": bool(inc.get("ok")), "text": inc.get("text", "")}}
+            "incluida": {"ok": bool(inc.get("ok")), "text": inc.get("text", "")},
+            "codex": {"ok": codex_available(), "text": "Usa tu suscripción de ChatGPT por Codex CLI." if codex_available()
+                      else "Codex CLI no está instalado (npm i -g @openai/codex y luego `codex login`)."}}
 
 
 def backend_name(b: Optional[str]) -> str:
-    return {"cli": "Claude Code", "api": "la API de Claude", "gemini": f"Gemini · {gemini_model()}",
+    return {"cli": "Claude Code", "codex": "Codex (ChatGPT)", "api": "la API de Claude", "gemini": f"Gemini · {gemini_model()}",
             "gemini_inc": "IA incluida · Gemini", "proxy": "IA incluida de NovoClip"}.get(b or "", "ninguna")
 
 
@@ -1627,6 +1645,43 @@ def _role_models(role: Optional[str], backend: str, opts: Options) -> list:
     return [want] if want == default else [want, default]
 
 
+def _ask_codex(prompt: str, schema, images: Optional[list] = None):
+    """Respuesta JSON con Codex CLI (suscripción de ChatGPT). Un solo modelo: los roles no aplican.
+    Sin comprobar en un equipo real: `-m` solo se pasa si defines NOVOCLIP_CODEX_MODEL, y si `-i` (imágenes) falla se
+    repite sin imágenes."""
+    import tempfile
+    exe = _codex_cli()
+    full = prompt + ("\n\nResponde ÚNICAMENTE con un objeto JSON válido (sin texto antes ni después) que cumpla este JSON Schema:\n"
+                     + json.dumps(schema.model_json_schema(), ensure_ascii=False))
+    with tempfile.TemporaryDirectory(prefix="novoclip_") as tmp:
+        out = Path(tmp) / "respuesta.txt"
+        base = [exe, "exec", "--skip-git-repo-check", "--ephemeral", "-o", str(out)]
+        if os.environ.get("NOVOCLIP_CODEX_MODEL"):
+            base += ["-m", os.environ["NOVOCLIP_CODEX_MODEL"]]
+        imgs, text = [], full
+        for k, (label, data) in enumerate(images or []):
+            p = Path(tmp) / f"frame_{k:02d}.jpg"
+            p.write_bytes(data)
+            imgs += ["-i", str(p)]
+            text += f"\n(imagen {k + 1}: {label})"
+        last_err = ""
+        for extra in ((imgs, []) if imgs else ([],)):
+            out.unlink(missing_ok=True)
+            r = _sp_run(base + extra + ["-"], input=text, capture_output=True, text=True, encoding="utf-8",
+                        errors="replace", cwd=tmp, timeout=900)
+            body = out.read_text(encoding="utf-8", errors="replace") if out.is_file() else (r.stdout or "")
+            if r.returncode != 0 and not body.strip():
+                last_err = (r.stderr or "")[-300:]
+                if "login" in last_err.lower() or "auth" in last_err.lower() or "sign in" in last_err.lower():
+                    raise RuntimeError("Codex no tiene sesión iniciada: abre una terminal, escribe `codex login` y entra con tu cuenta de ChatGPT.")
+                continue
+            try:
+                return schema.model_validate_json(_extract_json(body))
+            except Exception as e:
+                last_err = f"respuesta no válida: {str(e)[:200]}"
+        raise RuntimeError(f"Codex falló: {last_err}")
+
+
 def ask_claude(prompt: str, schema, opts: Options, images: Optional[list] = None, videos: Optional[list] = None,
                role: Optional[str] = None):
     """Pide a Claude una respuesta con la forma de `schema` (modelo pydantic).
@@ -1644,6 +1699,8 @@ def ask_claude(prompt: str, schema, opts: Options, images: Optional[list] = None
                            model=inc.get("gemini_model"), videos=videos)
     if backend == "proxy":
         return _ask_proxy(prompt, schema, images)
+    if backend == "codex":
+        return _ask_codex(prompt, schema, images)
     if backend == "api":
         import anthropic
 

@@ -258,7 +258,7 @@ export interface PreviewInput {
   source_quality: "max" | "1080";
   at: number; // posición del video (0-1)
 }
-export type AiSource = "auto" | "cli" | "claude_api" | "gemini" | "incluida";
+export type AiSource = "auto" | "cli" | "claude_api" | "gemini" | "incluida" | "codex";
 export interface SettingsInput {
   ai_source?: AiSource;
   ai_mode?: "incluida" | "propia";
