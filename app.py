@@ -218,6 +218,8 @@ async def create_job(
     speed: str = Form("auto"),
     refine_words: bool = Form(False),
     denoise: bool = Form(False),
+    outro_text: str = Form(""),
+    outro_secs: float = Form(1.6),
 ):
     if not url and not file:
         raise HTTPException(400, "Pega un enlace (YouTube, Twitch, Kick o TikTok) o sube un video.")
@@ -262,7 +264,7 @@ async def create_job(
                  use_ai=use_ai, ai_provider=ai_provider, smart_download=smart_download,
                  source_quality=source_quality if source_quality in ("max", "1080") else "max", use_captions=use_captions, crf=crf, review=review, video_ai=video_ai, jumpcuts=jumpcuts, zoom=zoom,
                  progress_bar=progress_bar, color_pop=color_pop, music=music, highlight_keywords=highlight_keywords,
-                 loudnorm=loudnorm, refine=refine, refine_words=refine_words, denoise=denoise, complete_ideas=complete_ideas, snap_silence=snap_silence,
+                 loudnorm=loudnorm, refine=refine, refine_words=refine_words, denoise=denoise, outro_text=outro_text.strip()[:80], outro_secs=outro_secs, complete_ideas=complete_ideas, snap_silence=snap_silence,
                  device=device if device in ("auto", "gpu", "cpu") else "auto",
                  speed=speed if speed in ("rapido", "normal", "calidad", "auto") else "auto",
                  live_window=max(60, min(int(live_window), 1800)))

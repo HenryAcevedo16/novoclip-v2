@@ -217,6 +217,8 @@ class Options:
     # --- integraciones opcionales (ver integraciones.py) ---
     refine_words: bool = False      # stable-ts: afinar los tiempos por palabra (si está instalado)
     denoise: bool = False           # limpiar el ruido del audio (DeepFilterNet o, si no, FFmpeg afftdn)
+    outro_text: str = ""             # tarjeta final: texto (p. ej. «Sígueme @canal»); vacío = sin tarjeta
+    outro_secs: float = 1.6         # duración de la tarjeta final (0.5-4 s)
 
 
 @dataclass
@@ -2816,7 +2818,13 @@ def _clean_word(w: str, upper: bool) -> str:
     return w
 
 
-def build_ass(words: list, clip: Clip, opts: Options, out_w: int, out_h: int, layout: str, path: Path) -> None:
+def outro_len(opts: Options) -> float:
+    """Segundos de la tarjeta final (0 si no hay texto)."""
+    return min(4.0, max(0.5, float(opts.outro_secs or 1.6))) if (opts.outro_text or "").strip() else 0.0
+
+
+def build_ass(words: list, clip: Clip, opts: Options, out_w: int, out_h: int, layout: str, path: Path,
+              outro_at: float = 0.0) -> None:
     style = opts.caption_style if opts.caption_style in STYLES else "viral"
     txt, act, out, size, upper, bord, shad, box = STYLES[style]
     size = int(size * out_w / 1080)
@@ -2847,6 +2855,10 @@ Style: Hook,{opts.font},{int(size*0.72)},{_ass_color('111111')},{_ass_color('111
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 """
     ev = []
+    if outro_at > 0 and outro_len(opts) > 0:   # tarjeta final: cuadro centrado sobre el último fotograma oscurecido
+        otxt = _clean_word(opts.outro_text.strip(), False).replace("\\", "")
+        ev.append(f"Dialogue: 2,{_fmt_t(outro_at)},{_fmt_t(outro_at + outro_len(opts))},Hook,,0,0,0,,"
+                  f"{{\\an5\\pos({out_w // 2},{out_h // 2})\\fad(150,0)\\fscx85\\fscy85\\t(0,200,\\fscx100\\fscy100)}}{otxt}")
     if opts.show_hook and clip.hook:
         hook = _clean_word(clip.hook, True)
         ev.append(f"Dialogue: 1,{_fmt_t(0)},{_fmt_t(min(3.2, clip.duration))},Hook,,0,0,0,,"
@@ -3134,7 +3146,7 @@ def _render_clip_once(src: Path, clip: Clip, tr: dict, opts: Options, outdir: Pa
         xs = char_x * sw
 
     # 6.3 subtítulos
-    build_ass(words, clip, opts, out_w, out_h, "split" if split else layout, ass)
+    build_ass(words, clip, opts, out_w, out_h, "split" if split else layout, ass, outro_at=new_dur)
 
     # 6.4 zoom dinámico y barra de progreso
     cap = cv2.VideoCapture(str(tmp))
@@ -3166,6 +3178,9 @@ def _render_clip_once(src: Path, clip: Clip, tr: dict, opts: Options, outdir: Pa
     vchain = []
     if opts.color_pop:
         vchain.append("eq=contrast=1.06:saturation=1.22:brightness=0.01,unsharp=5:5:0.45:5:5:0")
+    OS = outro_len(opts)
+    if OS:      # congela el último fotograma y lo oscurece mientras dura la tarjeta
+        vchain += [f"tpad=stop_mode=clone:stop_duration={OS:.3f}", f"eq=brightness=-0.45:enable='gte(t,{new_dur:.3f})'"]
     ass_f = f"ass='{_filter_path(ass)}'"
     if FONTS_DIR.exists() and any(f.suffix.lower() in (".ttf", ".otf") for f in FONTS_DIR.iterdir()):
         ass_f += f":fontsdir='{_filter_path(FONTS_DIR)}'"
@@ -3204,7 +3219,8 @@ def _render_clip_once(src: Path, clip: Clip, tr: dict, opts: Options, outdir: Pa
                 ain, nxt = str(nxt), nxt + 1
             else:
                 voice = integraciones.AFFTDN + "," + voice
-        graph.append(f"[{ain}:a]{voice}aresample=48000,aformat=sample_fmts=fltp:channel_layouts=stereo[voice]")
+        apad = f",apad=pad_dur={OS:.3f}" if OS else ""
+        graph.append(f"[{ain}:a]{voice}aresample=48000,aformat=sample_fmts=fltp:channel_layouts=stereo{apad}[voice]")
         song = _pick_music() if opts.music else None
         if song:
             inputs += ["-stream_loop", "-1", "-i", str(song)]
@@ -3218,7 +3234,7 @@ def _render_clip_once(src: Path, clip: Clip, tr: dict, opts: Options, outdir: Pa
             graph[-1] = graph[-1].replace("[voice]", "[aout]")
         maps += ["-map", "[aout]"]
     cmd = (["ffmpeg", "-y", "-v", "error"] + inputs + ["-filter_complex", ";".join(graph)] + maps +
-           venc + ["-c:a", "aac", "-b:a", "256k", "-movflags", "+faststart", "-shortest", "-t", f"{new_dur:.3f}", str(final)])
+           venc + ["-c:a", "aac", "-b:a", "256k", "-movflags", "+faststart", "-shortest", "-t", f"{new_dur + OS:.3f}", str(final)])
     proc = _sp_popen(cmd, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
 
     k = 0
@@ -3362,7 +3378,7 @@ def _render_clip_once(src: Path, clip: Clip, tr: dict, opts: Options, outdir: Pa
     shutil.rmtree(outdir / f".{name}_dn", ignore_errors=True)
     clip.file, clip.thumb = final.name, thumb.name if thumb.exists() else ""
     clip.layout = layout
-    clip.out_duration = round(new_dur, 2)
+    clip.out_duration = round(new_dur + OS, 2)
     return clip
 
 
@@ -4991,7 +5007,7 @@ def preview_framing(source: str, workdir: Path, opts: Options, at: float = 0.35,
     para ver cómo quedará antes de procesar el video entero. `at` = posición del video (0-1)."""
     global _AI_PROVIDER
     _AI_PROVIDER = norm_provider(opts.ai_provider)
-    o = resolve_auto(replace(opts, caption_style="none", show_hook=False, music=False, review=False, loudnorm=False))
+    o = resolve_auto(replace(opts, caption_style="none", show_hook=False, music=False, review=False, loudnorm=False, outro_text=""))
     workdir.mkdir(parents=True, exist_ok=True)
     outdir = workdir / "clips"
     outdir.mkdir(exist_ok=True)
