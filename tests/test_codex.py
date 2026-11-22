@@ -64,3 +64,17 @@ open(a[a.index("-o") + 1], "w").write('{{"titulo": "sin_m"}}')
     monkeypatch.setenv("NOVOCLIP_CODEX_CLI", str(f))
     assert P._ask_codex("p", R, role="tech").titulo == "sin_m"      # terra falla -> repite sin -m
     assert P._ask_codex("p", R, role="copy").titulo == "sin_m"      # copy no usa -m
+
+
+def test_codex_recibe_instrucciones_detallistas(tmp_path, monkeypatch):
+    f = tmp_path / "codex"
+    f.write_text(f"""#!{sys.executable}
+import sys
+a = sys.argv[1:]
+t = sys.stdin.read()
+ok = "MODO DETALLISTA" in t and "JSON Schema" in t
+open(a[a.index("-o") + 1], "w").write('{{"titulo": "%s"}}' % ("si" if ok else "no"))
+""", encoding="utf-8")
+    f.chmod(f.stat().st_mode | stat.S_IEXEC)
+    monkeypatch.setenv("NOVOCLIP_CODEX_CLI", str(f))
+    assert P._ask_codex("p", R).titulo == "si"

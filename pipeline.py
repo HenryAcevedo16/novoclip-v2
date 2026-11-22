@@ -1645,13 +1645,23 @@ def _role_models(role: Optional[str], backend: str, opts: Options) -> list:
     return [want] if want == default else [want, default]
 
 
+_CODEX_DETALLE = """MODO DETALLISTA (obligatorio): antes de responder revisa punto por punto y corrige lo que falle.
+1) Corte: lee en voz alta la primera y la última frase del clip; no empieces ni termines a mitad de palabra o frase, y quita saludos, muletillas y silencios del inicio.
+2) Gancho: lo más fuerte debe sonar en los primeros 3 segundos; si no, mueve el inicio.
+3) Final: la idea debe quedar cerrada y que lo siguiente en la transcripción no la complete.
+4) Textos: título <= 60 caracteres, gancho <= 6 palabras con sentido por sí solo, descripción en 3 partes (reacción, contexto sin spoiler, pregunta) y 3-6 hashtags relevantes; en el idioma del video y sin inventar nada que no se diga.
+5) Palabras clave: solo palabras EXACTAS que se dicen en el clip.
+6) Comprueba los números (índices, tiempos, puntuaciones) y que el JSON cumpla el esquema.
+Si dudas entre dos opciones, elige la que mejor retiene y dilo en una frase breve."""
+
+
 def _ask_codex(prompt: str, schema, images: Optional[list] = None, role: Optional[str] = None):
     """Respuesta JSON con Codex CLI (suscripción de ChatGPT). Un solo modelo: los roles no aplican.
     Sin comprobar en un equipo real: `-m` solo se pasa si defines NOVOCLIP_CODEX_MODEL, y si `-i` (imágenes) falla se
     repite sin imágenes."""
     import tempfile
     exe = _codex_cli()
-    full = prompt + ("\n\nResponde ÚNICAMENTE con un objeto JSON válido (sin texto antes ni después) que cumpla este JSON Schema:\n"
+    full = prompt + "\n\n" + _CODEX_DETALLE + ("\n\nResponde ÚNICAMENTE con un objeto JSON válido (sin texto antes ni después) que cumpla este JSON Schema:\n"
                      + json.dumps(schema.model_json_schema(), ensure_ascii=False))
     with tempfile.TemporaryDirectory(prefix="novoclip_") as tmp:
         out = Path(tmp) / "respuesta.txt"
