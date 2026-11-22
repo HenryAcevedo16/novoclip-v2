@@ -1746,7 +1746,7 @@ def select_ai(tr: dict, opts: Options, video_title: str = "", src: Optional[Path
         remate: int = Field(description="0-10: termina con un cierre, punchline o frase memorable")
         virality_score: int = Field(description="0-100, nota global")
         reason: str = Field(description="por qué funcionará en redes, una frase")
-        caption: str = Field(description="descripción para TikTok/Reels/Shorts con una pregunta que invite a comentar")
+        caption: str = Field(description="descripción en el idioma del video basada en lo que se DICE en el clip (transcripción): 1) reacción real al inicio con emoji, 2) contexto de qué pasa sin revelar el final, 3) pregunta directa que invite a contar su propia experiencia, terminando en 👇. 2-4 frases, sin inventar nada que no se diga")
         hashtags: list[str] = Field(description="3-6 hashtags relevantes")
         keywords: list[str] = Field(description="3-8 palabras EXACTAS dichas en el clip que conviene resaltar "
                                                 "(cifras, palabras fuertes, nombres)")
@@ -3654,7 +3654,7 @@ def manual_clips(tr: dict, ranges: list, opts: Options, video_title: str = "") -
         clip: int = Field(description="número del clip")
         title: str = Field(description="título para publicar, máx 60 caracteres")
         hook: str = Field(description="texto en pantalla los primeros 3 s, máx 6 palabras, que genere curiosidad")
-        caption: str = Field(description="descripción con una pregunta que invite a comentar")
+        caption: str = Field(description="descripción en el idioma del video basada en lo que se DICE en el clip (transcripción): 1) reacción real al inicio con emoji, 2) contexto de qué pasa sin revelar el final, 3) pregunta directa que invite a contar su propia experiencia, terminando en 👇. 2-4 frases, sin inventar nada que no se diga")
         hashtags: list[str] = Field(description="3-6 hashtags")
         keywords: list[str] = Field(description="3-8 palabras EXACTAS dichas en el clip que conviene resaltar")
         virality_score: int = Field(description="0-100: potencial en redes")
@@ -4171,7 +4171,7 @@ y reescribiendo los textos; un problema de encuadre se arregla eligiendo otro "l
     class Copy(BaseModel):
         title: str = Field(description="título para publicar, máx 60 caracteres")
         hook: str = Field(description="texto en pantalla los primeros 3 s, máx 6 palabras, que genere curiosidad")
-        caption: str = Field(description="descripción con una pregunta que invite a comentar")
+        caption: str = Field(description="descripción en el idioma del video basada en lo que se DICE en el clip (transcripción): 1) reacción real al inicio con emoji, 2) contexto de qué pasa sin revelar el final, 3) pregunta directa que invite a contar su propia experiencia, terminando en 👇. 2-4 frases, sin inventar nada que no se diga")
         hashtags: list[str] = Field(description="3-6 hashtags")
 
     class Verify(BaseModel):
