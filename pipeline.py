@@ -1645,7 +1645,7 @@ def _role_models(role: Optional[str], backend: str, opts: Options) -> list:
     return [want] if want == default else [want, default]
 
 
-def _ask_codex(prompt: str, schema, images: Optional[list] = None):
+def _ask_codex(prompt: str, schema, images: Optional[list] = None, role: Optional[str] = None):
     """Respuesta JSON con Codex CLI (suscripción de ChatGPT). Un solo modelo: los roles no aplican.
     Sin comprobar en un equipo real: `-m` solo se pasa si defines NOVOCLIP_CODEX_MODEL, y si `-i` (imágenes) falla se
     repite sin imágenes."""
@@ -1656,8 +1656,9 @@ def _ask_codex(prompt: str, schema, images: Optional[list] = None):
     with tempfile.TemporaryDirectory(prefix="novoclip_") as tmp:
         out = Path(tmp) / "respuesta.txt"
         base = [exe, "exec", "--skip-git-repo-check", "--ephemeral", "-o", str(out)]
-        if os.environ.get("NOVOCLIP_CODEX_MODEL"):
-            base += ["-m", os.environ["NOVOCLIP_CODEX_MODEL"]]
+        model = (role and os.environ.get(f"NOVOCLIP_CODEX_MODEL_{role.upper()}")) or os.environ.get("NOVOCLIP_CODEX_MODEL")
+        if model:       # un modelo por rol (tech/copy/verify) si lo defines; sin comprobar los nombres con Codex real
+            base += ["-m", model]
         imgs, text = [], full
         for k, (label, data) in enumerate(images or []):
             p = Path(tmp) / f"frame_{k:02d}.jpg"
@@ -1700,7 +1701,7 @@ def ask_claude(prompt: str, schema, opts: Options, images: Optional[list] = None
     if backend == "proxy":
         return _ask_proxy(prompt, schema, images)
     if backend == "codex":
-        return _ask_codex(prompt, schema, images)
+        return _ask_codex(prompt, schema, images, role)
     if backend == "api":
         import anthropic
 
@@ -4318,7 +4319,7 @@ Comprueba: (1) empieza en el gancho, sin muletillas; (2) el final cierra la idea
 ok=true si todo bien. Si no: fix = tech (corte), copy (textos) o both, y motivo breve (máx 120 caracteres)."""
         return ask_claude(pr, Verify, o, role="verify")
 
-    can_verify = ai_backend() in ("cli", "api")
+    can_verify = ai_backend() in ("cli", "api", "codex")
     tech, cut, cp, fix, last_motivo, verified = None, None, None, "", "", None
     for rnd in range(2):
         if need_tech and (tech is None or fix in ("tech", "both")):
