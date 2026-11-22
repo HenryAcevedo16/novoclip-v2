@@ -48,3 +48,19 @@ def test_codex_no_instalado(monkeypatch):
     monkeypatch.setattr(P.shutil, "which", lambda n: None)
     monkeypatch.setattr(P, "_AI_PROVIDER", "codex")
     assert P.ai_backend() is None
+
+
+def test_codex_modelo_por_rol_y_respaldo_sin_modelo(tmp_path, monkeypatch):
+    f = tmp_path / "codex"
+    f.write_text(f"""#!{sys.executable}
+import sys
+a = sys.argv[1:]
+sys.stdin.read()
+if "-m" in a and a[a.index("-m") + 1] == "gpt-5.6-terra" and "{tmp_path}/ok" not in a:
+    sys.stderr.write("model not available"); sys.exit(1)
+open(a[a.index("-o") + 1], "w").write('{{"titulo": "sin_m"}}')
+""", encoding="utf-8")
+    f.chmod(f.stat().st_mode | stat.S_IEXEC)
+    monkeypatch.setenv("NOVOCLIP_CODEX_CLI", str(f))
+    assert P._ask_codex("p", R, role="tech").titulo == "sin_m"      # terra falla -> repite sin -m
+    assert P._ask_codex("p", R, role="copy").titulo == "sin_m"      # copy no usa -m

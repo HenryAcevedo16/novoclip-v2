@@ -1656,9 +1656,10 @@ def _ask_codex(prompt: str, schema, images: Optional[list] = None, role: Optiona
     with tempfile.TemporaryDirectory(prefix="novoclip_") as tmp:
         out = Path(tmp) / "respuesta.txt"
         base = [exe, "exec", "--skip-git-repo-check", "--ephemeral", "-o", str(out)]
-        model = (role and os.environ.get(f"NOVOCLIP_CODEX_MODEL_{role.upper()}")) or os.environ.get("NOVOCLIP_CODEX_MODEL")
-        if model:       # un modelo por rol (tech/copy/verify) si lo defines; sin comprobar los nombres con Codex real
-            base += ["-m", model]
+        # tech/verify -> gpt-5.6-terra (comprobado en un equipo real); copy -> el modelo por defecto de Codex (Luna).
+        # Cada rol se puede cambiar con NOVOCLIP_CODEX_MODEL_<ROL> o NOVOCLIP_CODEX_MODEL. Si el modelo falla, se repite sin -m.
+        model = (role and os.environ.get(f"NOVOCLIP_CODEX_MODEL_{role.upper()}")) or os.environ.get("NOVOCLIP_CODEX_MODEL") \
+            or ("gpt-5.6-terra" if role in ("tech", "verify") else None)
         imgs, text = [], full
         for k, (label, data) in enumerate(images or []):
             p = Path(tmp) / f"frame_{k:02d}.jpg"
@@ -1666,9 +1667,10 @@ def _ask_codex(prompt: str, schema, images: Optional[list] = None, role: Optiona
             imgs += ["-i", str(p)]
             text += f"\n(imagen {k + 1}: {label})"
         last_err = ""
-        for extra in ((imgs, []) if imgs else ([],)):
+        tries = [(e, m) for m in ((model, None) if model else (None,)) for e in ((imgs, []) if imgs else ([],))]
+        for extra, mdl in tries:
             out.unlink(missing_ok=True)
-            r = _sp_run(base + extra + ["-"], input=text, capture_output=True, text=True, encoding="utf-8",
+            r = _sp_run(base + (["-m", mdl] if mdl else []) + extra + ["-"], input=text, capture_output=True, text=True, encoding="utf-8",
                         errors="replace", cwd=tmp, timeout=900)
             body = out.read_text(encoding="utf-8", errors="replace") if out.is_file() else (r.stdout or "")
             if r.returncode != 0 and not body.strip():
