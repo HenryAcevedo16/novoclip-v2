@@ -52,6 +52,7 @@ interface Settings {
   refine: boolean; // afinar inicio/fin con IA
   refineWords: boolean; // stable-ts: tiempos por palabra
   denoise: boolean; // limpiar ruido del audio
+  broll: boolean; // imágenes de apoyo con IA
   outroText: string; // tarjeta final (vacío = sin tarjeta)
   completeIdeas: boolean; // que el clip termine cuando la idea queda cerrada
   videoAi: boolean; // la IA ve el video del clip (Gemini)
@@ -67,7 +68,7 @@ interface Settings {
 
 const DEFAULTS: Settings = {
   numClips: 5, minLen: 25, maxLen: 45, aspect: "9:16", captionStyle: "viral", review: false, templateId: null,
-  layout: "auto", jumpcuts: true, zoom: true, progressBar: true, colorPop: true, music: true, captions: true, showHook: true, highlightKw: true, loudnorm: true, useAi: false, refine: true, refineWords: false, denoise: false, outroText: "", completeIdeas: true, videoAi: false, snapSilence: true, live: false, liveEvery: 3, smartDownload: true, quality: "max", aiProvider: "auto", pick: "ia", logoOn: true,
+  layout: "auto", jumpcuts: true, zoom: true, progressBar: true, colorPop: true, music: true, captions: true, showHook: true, highlightKw: true, loudnorm: true, useAi: false, refine: true, refineWords: false, denoise: false, broll: false, outroText: "", completeIdeas: true, videoAi: false, snapSilence: true, live: false, liveEvery: 3, smartDownload: true, quality: "max", aiProvider: "auto", pick: "ia", logoOn: true,
 };
 
 const AI_NAMES: Record<AiSource, string> = { auto: "Automática", cli: "Mi suscripción de Claude", claude_api: "API de Claude", gemini: "Gemini", incluida: "IA incluida", codex: "Mi suscripción de ChatGPT" };
@@ -252,6 +253,7 @@ export function HomeFlow() {
         refine_words: s.refineWords,
         denoise: s.denoise,
         outro_text: s.outroText.trim() || undefined,
+        broll: s.broll && withAi,
         complete_ideas: s.completeIdeas,
         video_ai: withAi && s.videoAi,
         snap_silence: s.snapSilence,
@@ -688,6 +690,7 @@ export function HomeFlow() {
               <Switch checked={s.refine} onChange={(v) => setS({ ...s, refine: v })} label="Afinar inicio y final con IA" hint="Solo con «Generar con IA»: una segunda pasada para que el clip empiece y termine justo." />
               <Switch checked={s.refineWords} onChange={(v) => setS({ ...s, refineWords: v })} label="Afinar tiempos por palabra (stable-ts)" hint={integ.data?.stable_ts ? "Instalado: subtítulos más ajustados a la voz. Tarda más al transcribir." : "No instalado: se ignora y se usan los tiempos normales. Instálalo con instalar_extras_windows.bat."} />
               <Switch checked={s.denoise} onChange={(v) => setS({ ...s, denoise: v })} label="Limpiar ruido del audio" hint={integ.data?.deepfilternet ? "Usa DeepFilterNet (instalado)." : "DeepFilterNet no está instalado: se usa el filtro de FFmpeg (afftdn), que funciona sin instalar nada."} />
+              <Switch checked={s.broll} disabled={!selectedAiAvailable} onChange={(v) => setS({ ...s, broll: v })} label="Imágenes de apoyo con IA" hint="Solo con «Generar con IA»: propone una imagen cada 4-6 s según lo que se dice. Busca primero en tu carpeta mi_material/ (el nombre del archivo debe contener la palabra, en inglés), luego en Pexels (clave gratis en PEXELS_API_KEY) y por último en Wikimedia Commons. Revisa los derechos de lo que publiques." />
               <Field label="Tarjeta final (opcional)" hint="Texto que aparece ~1,5 s al terminar el clip, p. ej. «Sígueme @migajasgaming». Vacío = sin tarjeta.">{(p) => <input {...p} value={s.outroText} onChange={(e) => setS({ ...s, outroText: e.target.value })} maxLength={80} placeholder="Sígueme @migajasgaming" className={inputClass} />}</Field>
               <Switch checked={s.completeIdeas} onChange={(v) => setS({ ...s, completeIdeas: v })} label="Terminar siempre la idea" hint="El clip no se corta a mitad de frase: si quien habla sigue explicando, se alarga hasta cerrar la idea (sin pasar del máximo)." />
               <Switch checked={s.snapSilence} onChange={(v) => setS({ ...s, snapSilence: v })} label="Cortar en silencios naturales" hint="Evita cortar a mitad de palabra." />

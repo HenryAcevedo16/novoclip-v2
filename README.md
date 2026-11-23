@@ -317,3 +317,7 @@ La carpeta `reglas/` controla cómo se eligen y escriben los clips **sin IA** y 
 ## Codex (ChatGPT) como IA
 
 Elige «Mi suscripción de ChatGPT» en Ajustes o en las opciones del video. Instala con `npm i -g @openai/codex` y entra con `codex login`. Usa `codex exec` con salida a archivo; un solo modelo para todo (sin reparto Opus/Sonnet/Haiku). Opcional: `NOVOCLIP_CODEX_MODEL` para elegir modelo. Sin comprobar en un equipo real: las imágenes (`-i`) y el nombre de modelo; si `-i` falla se repite sin imágenes.
+
+## Imágenes de apoyo (B-roll) con IA
+
+Opción «Imágenes de apoyo con IA» (solo con «Generar con IA»). La IA propone hasta 6 momentos del clip, cada uno con una búsqueda en inglés, y la imagen entra a pantalla completa 1,5-3,5 s con fundido, bajo los subtítulos. Se busca, por orden: (1) tu carpeta `mi_material/` (imágenes o videos cuyo nombre contenga la palabra, p. ej. `sword.jpg`), (2) Pexels si defines `PEXELS_API_KEY` (clave gratis), (3) Wikimedia Commons. La propuesta se guarda por clip y no se repite al volver a renderizar. Revisa los derechos de las imágenes que publiques: lo de Pexels y Wikimedia tiene licencias propias, y lo tuyo es responsabilidad tuya.

@@ -1,17 +1,17 @@
 # Graph Report - novoclip-v2  (2026-11-23)
 
 ## Corpus Check
-- 99 files · ~90,089 words
+- 100 files · ~91,294 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 14 file(s) not represented in the graph (top: .bat 7, (none) 5, .example 1)
 
 ## Summary
-- 1257 nodes · 3021 edges · 69 communities (51 shown, 18 thin omitted)
-- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 43 edges (avg confidence: 0.86)
+- 1268 nodes · 3044 edges · 69 communities (49 shown, 20 thin omitted)
+- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 44 edges (avg confidence: 0.86)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `efb36977`
+- Built from commit: `40f6ed4c`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -24,7 +24,7 @@
 - HomeFlow.tsx
 - NovoClip ✂️ — tu propia app de clipping
 - Options
-- test_reglas.py
+- optimize_clip
 - types.ts
 - Api
 - mock.ts
@@ -34,10 +34,10 @@
 - ProjectDetail.tsx
 - Button
 - package.json
-- purge_expired
+- _job_age_ref
 - pathlib
 - extras.ts
-- rules.py
+- test_reglas.py
 - novoclip
 - compilerOptions
 - server.py
@@ -64,30 +64,30 @@
 - iniciar_mac_linux.sh
 - opus-worker.md
 - Path
-- Clip
+- _clip_task
 - optimize_clip
 - CalendarView.tsx
 - test_clip_editing.py
 - Equipo de desarrollo IA de ClipForge
-- load_rules
+- Servidor de IA de NovoClip (IA incluida)
 - sonnet-reviewer.md
 - subprocess
 - MockSwitcher.tsx
 - _live_source
 - _IgnoreWinReset
 - test_descargar.py
-- Cancelled
-- read_guide
+- _no_cache_pages
+- test_broll.py
 - guia_ia.md
 
 ## God Nodes (most connected - your core abstractions)
 1. `Code map` - 51 edges
-2. `cn()` - 49 edges
-3. `Options` - 48 edges
-4. `NovoClip ✂️ — tu propia app de clipping` - 39 edges
+2. `Options` - 49 edges
+3. `cn()` - 49 edges
+4. `NovoClip ✂️ — tu propia app de clipping` - 40 edges
 5. `Api` - 38 edges
-6. `process()` - 34 edges
-7. `_render_clip_once()` - 33 edges
+6. `_render_clip_once()` - 34 edges
+7. `process()` - 34 edges
 8. `optimize_clip()` - 32 edges
 9. `process_live()` - 30 edges
 10. `Button()` - 30 edges
@@ -97,29 +97,29 @@
   docs/STATUS.md → pipeline.py
 - `En la app` --references--> `gemini_key()`  [INFERRED]
   servidor_ia/LEEME.md → pipeline.py
-- `IA incluida o clave propia (nuevo)` --references--> `gemini_key()`  [INFERRED]
-  README.md → pipeline.py
 - `hook()` --indirect_call--> `label()`  [INFERRED]
   pipeline.py → scripts/gen_map.py
+- `IA incluida o clave propia (nuevo)` --references--> `gemini_key()`  [INFERRED]
+  README.md → pipeline.py
 - `test_rerender_inside_saved_piece_does_not_download()` --calls--> `rerender_clip()`  [EXTRACTED]
   tests/test_clip_editing.py → pipeline.py
 
 ## Import Cycles
 - None detected.
 
-## Communities (69 total, 18 thin omitted)
+## Communities (69 total, 20 thin omitted)
 
 ### Community 0 - "app.py"
-Cohesion: 0.10
-Nodes (17): _anunciar_version(), api_version(), cancel_job(), classic(), _clip_by_index(), clip_project(), clip_subs(), _clip_subs() (+9 more)
+Cohesion: 0.12
+Nodes (12): _anunciar_version(), api_version(), classic(), diagnostics(), gemini_models(), get_file(), get_integraciones(), get_job() (+4 more)
 
 ### Community 1 - "pipeline.py"
 Cohesion: 0.06
-Nodes (29): analyze_framing(), apply_zoom(), _ass_color(), _blur_bg(), build_ass(), _cam_panel(), _clean_word(), _cluster_people() (+21 more)
+Nodes (31): analyze_framing(), apply_zoom(), _ass_color(), _blur_bg(), build_ass(), _cam_panel(), _clean_word(), _cluster_people() (+23 more)
 
 ### Community 2 - "ask_claude"
 Cohesion: 0.06
-Nodes (38): config(), gemini_models(), settings(), ai_backend(), ai_mode(), _ai_note(), ai_source(), ai_sources_status() (+30 more)
+Nodes (38): config(), ai_backend(), ai_mode(), _ai_note(), ai_source(), ai_sources_status(), anthropic_key(), ask_claude() (+30 more)
 
 ### Community 3 - "Code map"
 Cohesion: 0.04
@@ -139,11 +139,11 @@ Nodes (47): Actualizar en Windows, Ajuste automático según el equipo (nuevo), 
 
 ### Community 7 - "Options"
 Cohesion: 0.10
-Nodes (32): main(), check_cancel(), describe_device(), download(), hook(), download_plain(), fetch_captions(), _ggml_model() (+24 more)
+Nodes (26): main(), Cancelled, check_cancel(), describe_device(), download(), hook(), download_plain(), _ggml_model() (+18 more)
 
-### Community 8 - "test_reglas.py"
-Cohesion: 0.18
-Nodes (14): apply_glossary(), _hook_options(), run_tech(), test_glossary_applies_on_cache_without_rewriting_file(), test_glossary_idempotent_and_user_wins(), test_glossary_multiword_merges_with_start_and_end(), test_glossary_single_word_keeps_times_and_punct(), test_hook_options_max3_first_is_current_no_leftovers() (+6 more)
+### Community 8 - "optimize_clip"
+Cohesion: 0.11
+Nodes (16): fetch_captions(), _group_words(), _job_info(), _live_src(), load_clip_for_edit(), _local_video(), norm_provider(), optimize_clip() (+8 more)
 
 ### Community 9 - "types.ts"
 Cohesion: 0.09
@@ -154,8 +154,8 @@ Cohesion: 0.15
 Nodes (20): allJobs(), buildEvents(), config, extremeJobs(), makeClips(), makeResult(), NOW(), seedJobs() (+12 more)
 
 ### Community 12 - "create_job"
-Cohesion: 0.21
-Nodes (8): clip_optimize(), clip_rerender(), clip_revert(), _clip_task(), create_job(), create_preview(), descargar(), _opts()
+Cohesion: 0.15
+Nodes (9): clip_rerender(), create_job(), create_preview(), delete_job(), descargar(), _opts(), purge_expired(), _purge_loop() (+1 more)
 
 ### Community 13 - "Options"
 Cohesion: 0.11
@@ -177,21 +177,17 @@ Nodes (18): PostDialog(), ScheduleDialog(), FramingPreview(), ResultThumb(), cli
 Cohesion: 0.05
 Nodes (50): dependencies, @fontsource/big-shoulders-display@^5.3.0, @fontsource-variable/bricolage-grotesque@^5.3.0, @fontsource-variable/figtree@^5.3.0, @fontsource-variable/manrope@^5.3.0, @heroui/react@^3.2.7, @heroui/styles@^3.2.7, @internationalized/date@^3.12.4 (+42 more)
 
-### Community 19 - "purge_expired"
-Cohesion: 0.33
-Nodes (3): _job_age_ref(), purge_expired(), _purge_loop()
-
 ### Community 20 - "pathlib"
-Cohesion: 0.23
+Cohesion: 0.18
 Nodes (8): cap(), current_section(), doc_map(), main(), milestone_id(), read(), render(), section()
 
 ### Community 21 - "extras.ts"
 Cohesion: 0.16
 Nodes (18): createExtras(), ExtrasCtx, K, load(), NET_LABEL, networkLabel(), seedAccounts(), seedPosts() (+10 more)
 
-### Community 22 - "rules.py"
-Cohesion: 0.19
-Nodes (12): _lines(), _norm(), read_glossary(), read_highlight(), read_list(), read_regexes(), read_templates(), _user_dir() (+4 more)
+### Community 22 - "test_reglas.py"
+Cohesion: 0.08
+Nodes (33): apply_glossary(), _hook_options(), load_rules(), pick(), _lines(), _norm(), read_glossary(), read_guide() (+25 more)
 
 ### Community 23 - "novoclip"
 Cohesion: 0.22
@@ -202,7 +198,7 @@ Cohesion: 0.11
 Nodes (18): compilerOptions, allowJs, esModuleInterop, incremental, isolatedModules, jsx, lib, module (+10 more)
 
 ### Community 25 - "server.py"
-Cohesion: 0.16
+Cohesion: 0.18
 Nodes (8): ai(), AIRequest, _db(), Img, _license(), license_status(), _used_today(), R
 
 ### Community 26 - "BrandKit.tsx"
@@ -215,23 +211,23 @@ Nodes (8): metadata, RootLayout(), viewport, AppShell(), isActive(), NAV, LogoMa
 
 ### Community 28 - "gen_map.py"
 Cohesion: 0.12
-Nodes (18): build_map(), clean(), _dash_summary(), Entry, fmt_tokens(), _hash_summary(), list_files(), main() (+10 more)
+Nodes (17): build_map(), clean(), _dash_summary(), Entry, fmt_tokens(), _hash_summary(), list_files(), main() (+9 more)
 
 ### Community 29 - "json"
-Cohesion: 0.22
-Nodes (3): decide(), line_count(), main()
+Cohesion: 0.24
+Nodes (4): decide(), line_count(), main(), _manifest_summary()
 
 ### Community 30 - "work"
 Cohesion: 0.23
 Nodes (9): _cleanup_partial(), work(), work(), work(), _edit_gate(), _worker(), progress(), begin_job() (+1 more)
 
 ### Community 31 - "_sp_run"
-Cohesion: 0.09
-Nodes (17): _add_nvidia_dll_dirs(), cancel_thread(), _encoder_test(), _fmt_clock(), hw_info(), _kill_tree(), _live_keep_source(), process_live() (+9 more)
+Cohesion: 0.08
+Nodes (18): _add_nvidia_dll_dirs(), _clip_video_bytes(), _encoder_test(), _fmt_clock(), _frames_b64(), hw_info(), _kill_tree(), _live_keep_source() (+10 more)
 
 ### Community 32 - "_job_dir"
-Cohesion: 0.16
-Nodes (7): clip_delete(), clip_for_edit(), clip_meta(), delete_job(), _job_dir(), _no_cache_pages(), _refresh_result()
+Cohesion: 0.20
+Nodes (10): _clip_by_index(), clip_delete(), clip_for_edit(), clip_meta(), clip_project(), clip_subs(), _clip_subs(), get_zip() (+2 more)
 
 ### Community 34 - "AGENTS.md"
 Cohesion: 0.29
@@ -250,7 +246,7 @@ Cohesion: 0.18
 Nodes (10): ASSET_KEYS, assetFor(), CLIP_POOL, ClipSeed, SeedJob, StoredJob, ClipResult, Job (+2 more)
 
 ### Community 39 - "test_codex.py"
-Cohesion: 0.31
+Cohesion: 0.27
 Nodes (4): _fake(), test_codex_reintenta_sin_imagenes(), test_codex_responde_y_se_elige(), test_codex_sin_sesion_da_mensaje_claro()
 
 ### Community 40 - "CLAUDE.md"
@@ -271,31 +267,31 @@ Nodes (4): Antes de planificar, Coordinación y cierre, Entregable de arquitectu
 
 ### Community 51 - "Path"
 Cohesion: 0.07
-Nodes (24): _all_words(), _attach_replay_signals(), _avoid_box(), classify_video(), delete_clip(), _filter_path(), _grab_jpeg(), _job_info() (+16 more)
+Nodes (25): align_clip(), _all_words(), _attach_replay_signals(), _avoid_box(), classify_video(), Clip, _cut_clip(), delete_clip() (+17 more)
 
-### Community 53 - "Clip"
-Cohesion: 0.15
-Nodes (8): align_clip(), Clip, _clip_video_bytes(), _cut_clip(), _frames_b64(), _keep_clip_source(), review_clip(), test_keep_clip_source_moves_file()
+### Community 53 - "_clip_task"
+Cohesion: 0.20
+Nodes (6): cancel_job(), clip_optimize(), clip_revert(), _clip_task(), settings(), cancel_thread()
 
 ### Community 54 - "optimize_clip"
-Cohesion: 0.14
-Nodes (18): optimize_clip(), cut_text(), run_copy(), run_verify(), env(), roles(), set_review(), test_cli_model_error_falls_back_to_sonnet() (+10 more)
+Cohesion: 0.18
+Nodes (13): env(), roles(), set_review(), test_gemini_backend_ignores_roles_and_skips_verify(), test_happy_path_order_and_one_call_each(), test_invalid_cut_keeps_original_and_does_not_call_opus_for_it(), test_invalid_cut_twice_says_so_in_notes(), test_no_technical_problems_skips_sonnet() (+5 more)
 
 ### Community 55 - "CalendarView.tsx"
 Cohesion: 0.12
 Nodes (38): metadata, Page(), NetworkChip(), CalendarView(), cap(), Cursor, dayLabel(), Dots() (+30 more)
 
 ### Community 56 - "test_clip_editing.py"
-Cohesion: 0.18
-Nodes (13): hook_of(), mk_lines(), test_hook_cuts_at_question_and_prefers_strong_line(), test_hook_ignores_lines_after_25s(), test_hook_max_words_and_no_filler_edges(), test_hook_no_orphan_inverted_marks(), test_hook_single_word_not_empty_and_no_cta(), test_live_src_reads_clip_src_and_legacy_and_broken() (+5 more)
+Cohesion: 0.16
+Nodes (14): hook_of(), job(), mk_lines(), test_hook_cuts_at_question_and_prefers_strong_line(), test_hook_ignores_lines_after_25s(), test_hook_max_words_and_no_filler_edges(), test_hook_no_orphan_inverted_marks(), test_hook_single_word_not_empty_and_no_cta() (+6 more)
 
 ### Community 57 - "Equipo de desarrollo IA de ClipForge"
 Cohesion: 0.29
 Nodes (6): Equipo de desarrollo IA de ClipForge, Flujo recomendado, Política de modelos, Roles, Skills del proyecto, Skills externas opcionales para frontend
 
-### Community 58 - "load_rules"
-Cohesion: 0.22
-Nodes (6): load_rules(), pick(), job(), job(), rdir(), test_user_rules_add_remove_and_reload_on_change()
+### Community 58 - "Servidor de IA de NovoClip (IA incluida)"
+Cohesion: 0.40
+Nodes (4): Arrancarlo, En la app, Licencias, Servidor de IA de NovoClip (IA incluida)
 
 ### Community 59 - "sonnet-reviewer.md"
 Cohesion: 0.40
@@ -306,30 +302,26 @@ Cohesion: 0.40
 Nodes (5): MockSwitcher(), MODES, MockMode, USE_MOCK, writeString()
 
 ### Community 62 - "_live_source"
-Cohesion: 0.12
-Nodes (8): _cookie_methods(), _cookie_opts(), _cookie_opts_now(), _find_cookies_file(), is_live_url(), _live_source(), platform_of(), _tiktok_live_api()
-
-### Community 66 - "read_guide"
-Cohesion: 0.50
-Nodes (3): read_guide(), test_guide_only_comments_gives_empty_and_prompt_unchanged(), test_guide_truncated_comments_dropped_and_user_replaces()
+Cohesion: 0.13
+Nodes (7): _cookie_methods(), _cookie_opts(), _cookie_opts_now(), _find_cookies_file(), _live_source(), platform_of(), _tiktok_live_api()
 
 ## Knowledge Gaps
-- **18 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **20 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `NovoClip ✂️ — tu propia app de clipping` connect `NovoClip ✂️ — tu propia app de clipping` to `integraciones.py`?**
-  _High betweenness centrality (0.036) - this node is a cross-community bridge._
+- **Why does `gemini_key()` connect `ask_claude` to `pipeline.py`, `Servidor de IA de NovoClip (IA incluida)`?**
+  _High betweenness centrality (0.037) - this node is a cross-community bridge._
 - **Should `app.py` be split into smaller, more focused modules?**
-  _Cohesion score 0.1028225806451613 - nodes in this community are weakly interconnected._
-- **Why does `gemini_key()` connect `ask_claude` to `pipeline.py`, `NovoClip ✂️ — tu propia app de clipping`?**
+  _Cohesion score 0.11692307692307692 - nodes in this community are weakly interconnected._
+- **Why does `NovoClip ✂️ — tu propia app de clipping` connect `NovoClip ✂️ — tu propia app de clipping` to `ask_claude`, `integraciones.py`?**
   _High betweenness centrality (0.034) - this node is a cross-community bridge._
 - **Should `pipeline.py` be split into smaller, more focused modules?**
-  _Cohesion score 0.05878084179970972 - nodes in this community are weakly interconnected._
-- **Why does `IA incluida o clave propia (nuevo)` connect `NovoClip ✂️ — tu propia app de clipping` to `ask_claude`?**
-  _High betweenness centrality (0.031) - this node is a cross-community bridge._
+  _Cohesion score 0.05723905723905724 - nodes in this community are weakly interconnected._
+- **Why does `IA incluida o clave propia (nuevo)` connect `ask_claude` to `NovoClip ✂️ — tu propia app de clipping`?**
+  _High betweenness centrality (0.028) - this node is a cross-community bridge._
 - **Should `ask_claude` be split into smaller, more focused modules?**
-  _Cohesion score 0.0576271186440678 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.05786090005844535 - nodes in this community are weakly interconnected._
 - **Should `Code map` be split into smaller, more focused modules?**
   _Cohesion score 0.038461538461538464 - nodes in this community are weakly interconnected._

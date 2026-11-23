@@ -166,6 +166,7 @@ export interface CreateJobInput {
   refine?: boolean; // afinar inicio y final con IA
   refine_words?: boolean; // stable-ts: afinar tiempos por palabra (opcional)
   denoise?: boolean; // limpiar ruido del audio (DeepFilterNet o FFmpeg afftdn)
+  broll?: boolean; // imágenes de apoyo que propone la IA (con «Generar con IA»)
   outro_text?: string; // tarjeta final con este texto (vacío = sin tarjeta)
   complete_ideas?: boolean; // que cada clip termine cuando la idea queda cerrada
   video_ai?: boolean; // la IA ve el video del clip (imagen + audio) al revisarlo (solo Gemini)

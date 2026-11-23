@@ -12,9 +12,9 @@
     "semantic_hash": ""
   },
   "app.py": {
-    "mtime": 1795399092.5207565,
-    "seen": 1795399177.4079027,
-    "ast_hash": "3ed9f6deb52dd2a2e4fc1c9bc9b9d02a",
+    "mtime": 1795399774.1629906,
+    "seen": 1795399833.2354627,
+    "ast_hash": "17b6dcfe33ddd9226c674d94007cba6b",
     "semantic_hash": ""
   },
   "frontend/app/ajustes/page.tsx": {
@@ -102,9 +102,9 @@
     "semantic_hash": ""
   },
   "frontend/components/home/HomeFlow.tsx": {
-    "mtime": 1795399113.9938018,
-    "seen": 1795399177.4079268,
-    "ast_hash": "6e492287c420a62daa556417297fc13d",
+    "mtime": 1795399781.7150009,
+    "seen": 1795399833.2354896,
+    "ast_hash": "24d77d93698e30c7aa6c9d4d9144e869",
     "semantic_hash": ""
   },
   "frontend/components/home/RecentProjects.tsx": {
@@ -294,9 +294,9 @@
     "semantic_hash": ""
   },
   "frontend/lib/api/real.ts": {
-    "mtime": 1795399104.312661,
-    "seen": 1795399177.4079592,
-    "ast_hash": "f56107a77b14645e83ade462fb0ec2d2",
+    "mtime": 1795399774.1675947,
+    "seen": 1795399833.2355485,
+    "ast_hash": "8fe398e7ad6a452427f3cfc8232b221f",
     "semantic_hash": ""
   },
   "frontend/lib/api/storage.ts": {
@@ -306,9 +306,9 @@
     "semantic_hash": ""
   },
   "frontend/lib/api/types.ts": {
-    "mtime": 1795399104.312238,
-    "seen": 1795399177.4079614,
-    "ast_hash": "94e1f669e3af5239c340df64c9854f58",
+    "mtime": 1795399774.1671057,
+    "seen": 1795399833.2355516,
+    "ast_hash": "d6d6e499a53b957bc1990e2c3c29e1b0",
     "semantic_hash": ""
   },
   "frontend/lib/api/wait.ts": {
@@ -402,9 +402,9 @@
     "semantic_hash": ""
   },
   "pipeline.py": {
-    "mtime": 1795399086.6847892,
-    "seen": 1795399177.40798,
-    "ast_hash": "dbe66fde389fa7a2c277b26a0a61c1a1",
+    "mtime": 1795399774.1662211,
+    "seen": 1795399833.2355733,
+    "ast_hash": "46a7e9374b60bff60d6d95c0ef2ccc16",
     "semantic_hash": ""
   },
   "scripts/gen_map.py": {
@@ -462,9 +462,9 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1795365341.4482322,
-    "seen": 1795365344.8983834,
-    "ast_hash": "18996adca82a272e4a978e9cfdf42792",
+    "mtime": 1795399829.8158543,
+    "seen": 1795399833.2356012,
+    "ast_hash": "0a18f1e1ab779633e97bcd0ae17db8df",
     "semantic_hash": ""
   },
   "docs/MAP.md": {
@@ -687,6 +687,12 @@
     "mtime": 1795399160.3598738,
     "seen": 1795399177.4079893,
     "ast_hash": "82355a84382fdaba6f4ddd88d2fea32b",
+    "semantic_hash": ""
+  },
+  "tests/test_broll.py": {
+    "mtime": 1795399787.5811973,
+    "seen": 1795399833.235581,
+    "ast_hash": "79e4aba1862bea6bfc589f25428877fe",
     "semantic_hash": ""
   },
   "frontend/package-lock.json": {

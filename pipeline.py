@@ -219,6 +219,8 @@ class Options:
     denoise: bool = False           # limpiar el ruido del audio (DeepFilterNet o, si no, FFmpeg afftdn)
     outro_text: str = ""             # tarjeta final: texto (p. ej. «Sígueme @canal»); vacío = sin tarjeta
     outro_secs: float = 1.6         # duración de la tarjeta final (0.5-4 s)
+    broll: bool = False             # imágenes de apoyo que la IA propone según lo que se dice (cada 4-6 s)
+    broll_max: int = 6              # máximo de imágenes por clip
 
 
 @dataclass
@@ -2902,6 +2904,131 @@ def _clean_word(w: str, upper: bool) -> str:
     return w
 
 
+# --------------------------------------------------------------------------- #
+# Imágenes y videos de apoyo (B-roll): la IA propone qué mostrar y cuándo; se buscan en tu carpeta
+# mi_material/, en Pexels (clave gratis) o en Wikimedia Commons (sin clave).
+# --------------------------------------------------------------------------- #
+BROLL_DIR = ROOT / "mi_material"
+_IMG_EXT = {".jpg", ".jpeg", ".png", ".webp"}
+_VID_EXT = {".mp4", ".mov", ".mkv", ".webm"}
+_UA = {"User-Agent": "NovoClip/2 (clip editor; local app)"}
+
+
+def pexels_key() -> Optional[str]:
+    return os.environ.get("PEXELS_API_KEY") or load_config().get("pexels_key") or None
+
+
+def _http_get(url: str, headers: Optional[dict] = None, timeout: int = 20) -> bytes:
+    import urllib.request
+    req = urllib.request.Request(url, headers={**_UA, **(headers or {})})
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        return r.read()
+
+
+def find_broll(query: str, cache: Path) -> Optional[Path]:
+    """Busca una imagen para `query` (en inglés, 1-3 palabras): tu carpeta mi_material/, Pexels y Wikimedia. None si no hay."""
+    import urllib.parse
+    q = re.sub(r"[^\w ]+", " ", query).strip().lower()
+    if not q:
+        return None
+    toks = [w for w in q.split() if len(w) > 2]
+    if BROLL_DIR.is_dir() and toks:
+        for f in sorted(BROLL_DIR.iterdir()):
+            if f.suffix.lower() in _IMG_EXT | _VID_EXT and any(w in _norm(f.stem) for w in toks):
+                return f
+    cache.mkdir(parents=True, exist_ok=True)
+    slug = re.sub(r"\W+", "_", q)[:40]
+    for f in cache.glob(slug + ".*"):
+        return f
+    urls = []
+    try:
+        if pexels_key():
+            d = json.loads(_http_get("https://api.pexels.com/v1/search?" + urllib.parse.urlencode(
+                {"query": q, "orientation": "portrait", "per_page": 3}), {"Authorization": pexels_key()}))
+            urls += [ph["src"].get("large") for ph in d.get("photos", []) if ph.get("src")]
+    except Exception as e:  # noqa: BLE001
+        print(f"  [B-roll] Pexels falló: {str(e)[:80]}")
+    if not urls:
+        try:
+            d = json.loads(_http_get("https://commons.wikimedia.org/w/api.php?" + urllib.parse.urlencode(
+                {"action": "query", "generator": "search", "gsrnamespace": 6, "gsrsearch": f"{q} filetype:bitmap",
+                 "gsrlimit": 4, "prop": "imageinfo", "iiprop": "url|mime", "iiurlwidth": 1080, "format": "json"})))
+            for pg in (d.get("query", {}).get("pages") or {}).values():
+                ii = (pg.get("imageinfo") or [{}])[0]
+                if ii.get("mime") in ("image/jpeg", "image/png") and ii.get("thumburl"):
+                    urls.append(ii["thumburl"])
+        except Exception as e:  # noqa: BLE001
+            print(f"  [B-roll] Wikimedia falló: {str(e)[:80]}")
+    for u in [u for u in urls if u][:3]:
+        try:
+            data = _http_get(u, timeout=30)
+            if len(data) > 5000:
+                dest = cache / (slug + (".png" if u.lower().split("?")[0].endswith(".png") else ".jpg"))
+                dest.write_bytes(data)
+                return dest
+        except Exception:  # noqa: BLE001
+            continue
+    return None
+
+
+def plan_broll(words: list, dur: float, opts: Options, cache: Path, clip: Clip) -> list:
+    """[(archivo, inicio, duración)] de imágenes de apoyo. La propuesta de la IA se guarda para no repetirla al volver a renderizar."""
+    from pydantic import BaseModel, Field
+
+    class Item(BaseModel):
+        start: float = Field(description="segundo del clip donde entra la imagen (>= 1.5)")
+        dur: float = Field(description="segundos en pantalla, entre 1.5 y 3.5")
+        query: str = Field(description="búsqueda en INGLÉS de 1-3 palabras: algo concreto y fotografiable (objeto, lugar, cosa)")
+
+    class Plan(BaseModel):
+        items: list[Item]
+
+    if not (opts.use_ai and ai_backend()) or not words or dur < 6:
+        return []
+    cache.mkdir(parents=True, exist_ok=True)
+    pj = cache / f"plan_{clip.index}.json"
+    sig = [round(clip.start, 1), round(clip.end, 1), len(words), opts.broll_max]
+    items = None
+    try:
+        d = json.loads(pj.read_text(encoding="utf-8"))
+        if d.get("sig") == sig:
+            items = d["items"]
+    except Exception:  # noqa: BLE001
+        pass
+    if items is None:
+        lines, cur = [], []
+        for w in words:
+            cur.append(w)
+            if len(cur) >= 8:
+                lines.append(f"[{cur[0]['s']:.1f}s] " + " ".join(x["w"] for x in cur))
+                cur = []
+        if cur:
+            lines.append(f"[{cur[0]['s']:.1f}s] " + " ".join(x["w"] for x in cur))
+        n = max(1, min(int(opts.broll_max), 10))
+        pr = (f"Eres editor de videos cortos. Elige hasta {n} momentos del clip (dura {dur:.0f} s) donde mostrar una imagen de apoyo "
+              "que ilustre lo que se dice, sin tapar el gancho (no antes de 1.5 s) y con al menos 4 s entre una y otra. "
+              "Solo cosas concretas y fotografiables (un objeto, un lugar, una herramienta). Nada de personas reales con nombre, "
+              "marcas registradas ni logos. Si no hay nada bueno, devuelve una lista vacía.\n\nTRANSCRIPCIÓN:\n" + "\n".join(lines))
+        try:
+            items = [i.model_dump() for i in ask_claude(pr, Plan, opts, role="copy").items]
+        except Exception as e:  # noqa: BLE001
+            print(f"  [B-roll] la IA no pudo proponer imágenes: {str(e)[:100]}")
+            return []
+        pj.write_text(json.dumps({"sig": sig, "items": items}, ensure_ascii=False), encoding="utf-8")
+    out, last_end = [], -9.0
+    for it in sorted(items, key=lambda x: x["start"]):
+        st, du = max(1.5, float(it["start"])), min(3.5, max(1.5, float(it["dur"])))
+        if st < last_end + 3.5 or st + du > dur - 0.4:
+            continue
+        f = find_broll(str(it["query"]), cache)
+        if f:
+            out.append((f, st, du))
+            last_end = st + du
+        if len(out) >= opts.broll_max:
+            break
+    return out
+
+
 def outro_len(opts: Options) -> float:
     """Segundos de la tarjeta final (0 si no hay texto)."""
     return min(4.0, max(0.5, float(opts.outro_secs or 1.6))) if (opts.outro_text or "").strip() else 0.0
@@ -3273,6 +3400,26 @@ def _render_clip_once(src: Path, clip: Clip, tr: dict, opts: Options, outdir: Pa
     inputs = ["-f", "rawvideo", "-pix_fmt", "bgr24", "-s", f"{out_w}x{out_h}", "-r", f"{fps:.3f}", "-i", "-",
               "-i", str(tmp)]
     nxt = 2
+    vsrc, pre = "[0:v]", []
+    bro = plan_broll(words, new_dur, opts, outdir / ".broll", clip) if opts.broll else []
+    if bro:
+        progress(p0 + (p1 - p0) * 0.26, f"Clip {clip.index}: {len(bro)} imágenes de apoyo")
+        prev = "vc"
+        pre.append(f"[0:v]{','.join(vchain) if vchain else 'null'}[vc]")
+        vchain = []
+        for k, (bf, st, du) in enumerate(bro):
+            if bf.suffix.lower() in _VID_EXT:
+                inputs += ["-stream_loop", "-1", "-t", f"{du:.2f}", "-i", str(bf)]
+                pre_f = f"fps={fps:.3f},"
+            else:
+                inputs += ["-loop", "1", "-framerate", f"{fps:.3f}", "-t", f"{du:.2f}", "-i", str(bf)]
+                pre_f = ""
+            pre.append(f"[{nxt}:v]{pre_f}scale={out_w}:{out_h}:force_original_aspect_ratio=increase,crop={out_w}:{out_h},"
+                       f"format=yuva420p,fade=t=in:st=0:d=0.15:alpha=1,fade=t=out:st={du - 0.15:.2f}:d=0.15:alpha=1,"
+                       f"setpts=PTS+{st:.3f}/TB[bk{k}]")
+            pre.append(f"[{prev}][bk{k}]overlay=0:0:eof_action=pass[bo{k}]")
+            prev, nxt = f"bo{k}", nxt + 1
+        vsrc = f"[{prev}]"
     logo = Path(opts.logo_path) if (opts.logo_on and opts.logo_path) else None
     if logo is not None and not logo.is_file():
         logo = None
@@ -3284,13 +3431,13 @@ def _render_clip_once(src: Path, clip: Clip, tr: dict, opts: Options, outdir: Pa
         mx, my_t, my_b = int(out_w * 0.04), int(out_h * 0.08), int(out_h * 0.14)
         xy = {"tl": f"{mx}:{my_t}", "tr": f"W-w-{mx}:{my_t}", "bl": f"{mx}:H-h-{my_b}",
               "br": f"W-w-{mx}:H-h-{my_b}", "center": "(W-w)/2:(H-h)/2"}.get(opts.logo_pos, f"W-w-{mx}:H-h-{my_b}")
-        graph = [f"[0:v]{','.join(vchain) if vchain else 'null'}[base]",
+        graph = pre + [f"{vsrc}{','.join(vchain) if vchain else 'null'}[base]",
                  f"[{li}:v]scale={lw}:-1,format=rgba,colorchannelmixer=aa={op:.2f}[lg]",
                  f"[base][lg]overlay={xy}:shortest=1[ovr]",
                  f"[ovr]{ass_f},format={pixfmt}[vout]"]
     else:
         vchain += [ass_f, "format=" + pixfmt]
-        graph = [f"[0:v]{','.join(vchain)}[vout]"]
+        graph = pre + [f"{vsrc}{','.join(vchain)}[vout]"]
     maps = ["-map", "[vout]"]
     if m["has_audio"]:
         voice = "loudnorm=I=-14:TP=-1.5:LRA=11," if opts.loudnorm else ""
@@ -5091,7 +5238,7 @@ def preview_framing(source: str, workdir: Path, opts: Options, at: float = 0.35,
     para ver cómo quedará antes de procesar el video entero. `at` = posición del video (0-1)."""
     global _AI_PROVIDER
     _AI_PROVIDER = norm_provider(opts.ai_provider)
-    o = resolve_auto(replace(opts, caption_style="none", show_hook=False, music=False, review=False, loudnorm=False, outro_text=""))
+    o = resolve_auto(replace(opts, caption_style="none", show_hook=False, music=False, review=False, loudnorm=False, outro_text="", broll=False))
     workdir.mkdir(parents=True, exist_ok=True)
     outdir = workdir / "clips"
     outdir.mkdir(exist_ok=True)
