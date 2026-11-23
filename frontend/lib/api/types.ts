@@ -357,6 +357,8 @@ export interface Api {
   // ✅ existe en el backend
   getConfig(): Promise<Config>;
   createJob(input: CreateJobInput): Promise<{ id: string }>;
+  /** Descarga el video o Short tal cual (MP4, sin editar) y lo guarda desde el navegador. */
+  downloadVideo(url: string): Promise<void>;
   getJob(id: string): Promise<Job>;
   cancelJob(id: string): Promise<void>;
   saveSettings(s: SettingsInput): Promise<Config>;

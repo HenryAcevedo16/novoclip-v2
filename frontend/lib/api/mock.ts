@@ -155,6 +155,10 @@ export const mockApi: Api = {
     return config;
   },
 
+  async downloadVideo() {
+    throw new ApiError("Descargar video solo funciona con el servidor real de NovoClip.", 0);
+  },
+
   /** Valida igual que app.py: create_job(). */
   async createJob(input: CreateJobInput) {
     await wait();

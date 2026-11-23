@@ -13,6 +13,7 @@ from typing import Optional
 
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse
+from starlette.background import BackgroundTask
 from fastapi.staticfiles import StaticFiles
 
 import integraciones
@@ -172,6 +173,23 @@ def _cleanup_partial(wd: Path) -> None:
 def _opts(**kw) -> Options:
     names = {f.name for f in fields(Options)}
     return Options(**{k: v for k, v in kw.items() if k in names and v is not None and v != ""})
+
+
+@app.post("/api/descargar")
+def descargar(url: str = Form(...)):
+    """Descarga un video o Short de YouTube (u otra web que entienda yt-dlp) tal cual, sin editar, y lo devuelve en MP4."""
+    url = url.strip()
+    if not url.lower().startswith(("http://", "https://")):
+        raise HTTPException(400, "Pega un enlace que empiece por http:// o https://")
+    wd = JOBS_DIR / "_descargas" / uuid.uuid4().hex[:12]
+    try:
+        f, title = pipeline.download_plain(url, wd, Options())
+    except Exception as e:  # noqa: BLE001
+        shutil.rmtree(wd, ignore_errors=True)
+        raise HTTPException(502, f"No se pudo descargar: {str(e)[-300:]}")
+    safe = "".join(c for c in title if c not in '\\/:*?"<>|\r\n').strip()[:80] or "video"
+    return FileResponse(f, media_type="video/mp4", filename=f"{safe}{f.suffix}",
+                        background=BackgroundTask(shutil.rmtree, wd, ignore_errors=True))
 
 
 @app.post("/api/jobs")

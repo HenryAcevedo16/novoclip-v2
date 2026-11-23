@@ -1,6 +1,6 @@
 "use client";
 import { Card, Chip, Tabs } from "@heroui/react";
-import { ArrowLeft, ArrowRight, Captions, ChevronDown, FileVideo, Film, Link2, Eye, Scissors, Send, Sparkles, Star, Upload, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Captions, ChevronDown, Download, FileVideo, Film, Link2, Eye, Scissors, Send, Sparkles, Star, Upload, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api, ApiError, type AiSource, type BrandTemplate, type ClipResult, type Job, type SubtitleStyleId } from "@/lib/api";
@@ -96,6 +96,7 @@ export function HomeFlow() {
   const [step, setStep] = useState(1);
   const [mode, setMode] = useState<"url" | "file">("url");
   const [url, setUrl] = useState("");
+  const [downloading, setDownloading] = useState(false);
   const platform = detectPlatform(url);
   const [file, setFile] = useState<File | null>(null);
   const [srcError, setSrcError] = useState<string | null>(null);
@@ -369,6 +370,27 @@ export function HomeFlow() {
                         {platform && <PlatformPill info={platform} className="self-start sm:hidden" />}
                         <Button variant="primary" onClick={goStep2} icon={<Sparkles className="size-4" aria-hidden />} className="min-h-14 px-7 text-base max-sm:w-full">
                           Obtener clips
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          loading={downloading}
+                          icon={<Download className="size-4" aria-hidden />}
+                          className="min-h-14 px-6 text-base max-sm:w-full"
+                          onClick={async () => {
+                            const u = url.trim();
+                            if (!/^https?:\/\//i.test(u)) return setSrcError("Pega un enlace que empiece por http:// o https://");
+                            setDownloading(true);
+                            try {
+                              await api.downloadVideo(u);
+                              toast("Video descargado.");
+                            } catch (e) {
+                              setSrcError(e instanceof ApiError ? e.message : "No se pudo descargar el video.");
+                            } finally {
+                              setDownloading(false);
+                            }
+                          }}
+                        >
+                          Descargar video
                         </Button>
                       </div>
                     )}

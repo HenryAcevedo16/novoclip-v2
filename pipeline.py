@@ -692,6 +692,20 @@ def yt_run(ydl_opts: dict, opts: Options, fn: Callable, progress: ProgressFn = _
         + "  3) Actualiza el descargador:  .venv\\Scripts\\pip install -U \"yt-dlp[default]\"") from first_err
 
 
+def download_plain(url: str, workdir: Path, opts: Options, progress: ProgressFn = _noop) -> tuple[Path, str]:
+    """Descarga el video tal cual (sin edición) en MP4, hasta 1080p. Devuelve (archivo, título)."""
+    import yt_dlp  # noqa: F401  (falla pronto y claro si falta)
+    workdir.mkdir(parents=True, exist_ok=True)
+    ydl_opts = {"format": "bv*[height<=1080][vcodec^=avc1]+ba[ext=m4a]/b[ext=mp4][height<=1080]/bv*[height<=1080]+ba/b",
+                "merge_output_format": "mp4", "format_sort": ["res", "fps", "br"],
+                "outtmpl": str(workdir / "video.%(ext)s"), "quiet": True, "no_warnings": True, "noplaylist": True}
+    info = yt_run(ydl_opts, opts, lambda y: y.extract_info(url, download=True), progress)
+    done = [p for p in workdir.glob("video.*") if p.suffix not in (".part", ".ytdl") and ".f" not in p.stem]
+    if not done:
+        raise RuntimeError("La descarga no terminó. Revisa tu conexión o actualiza yt-dlp (pip install -U yt-dlp).")
+    return max(done, key=lambda p: p.stat().st_size), info.get("title") or "video"
+
+
 def download(url: str, workdir: Path, opts: Options, progress: ProgressFn = _noop,
              audio_only: bool = False, section: Optional[tuple] = None, stem: str = "source",
              label: str = "Descargando video...") -> tuple[Path, str]:

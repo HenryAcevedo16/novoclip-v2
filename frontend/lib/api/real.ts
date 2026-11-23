@@ -57,6 +57,38 @@ export const realApi: Api = {
     return request<{ id: string }>("/api/preview", { method: "POST", body: fd });
   },
 
+  async downloadVideo(url: string) {
+    const fd = new FormData();
+    fd.set("url", url);
+    let res: Response;
+    try {
+      res = await fetch("/api/descargar", { method: "POST", body: fd });
+    } catch {
+      throw new ApiError("No pudimos conectar con el servidor. Revisa que NovoClip esté encendido e inténtalo de nuevo.", 0);
+    }
+    if (!res.ok) {
+      let detail = `Error ${res.status}`;
+      try {
+        const body = await res.json();
+        if (typeof body.detail === "string") detail = body.detail;
+      } catch {
+        /* respuesta sin JSON */
+      }
+      throw new ApiError(detail, res.status);
+    }
+    const cd = res.headers.get("content-disposition") ?? "";
+    const m = /filename\*=utf-8''([^;]+)/i.exec(cd) ?? /filename="?([^";]+)"?/i.exec(cd);
+    const name = m ? decodeURIComponent(m[1]) : "video.mp4";
+    const href = URL.createObjectURL(await res.blob());
+    const a = document.createElement("a");
+    a.href = href;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(href), 10000);
+  },
+
   createJob(input: CreateJobInput) {
     const fd = new FormData();
     if (input.url) fd.set("url", input.url.trim());
